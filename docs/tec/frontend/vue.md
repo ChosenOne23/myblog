@@ -82,4 +82,32 @@ cd -
 
 要点 5：图片路径设置问题，在typora偏好设置中将图片默认的保存路径设置为../assets，并勾选上以下信息，保证每次插入图片在本地都有存储且方便上传时索引准确。如下：
 
-<img src="../assets/image-20240330183159891.png" alt="image-20240330183159891" style="zoom: 67%;" />
+<img src="../assets/image-20240330183159891.png" alt="image-20240330183159891" style="zoom: 67%;" />要点6：为了多设备同步，将现有博客部署到 master 分支下，即 sourch_code.sh 文件。在当前设备更新博客内容后，通过deploy.sh push到 gh_pages 分支，随后将项目源代码也进行更新
+
+```bash
+sh .sh # 从github master clone master分支代码
+# 更新博客内容
+sh deploy.sh # push 到gh_pages，方便访问
+sh sourch_code.sh # 从github master分支拉取源代码
+```
+
+
+
+
+
+```bash
+# 第一句话，切换到master branch
+git checkout master
+# 第二句话，新建一个branch来备份本地现有的“旧库”，因为一旦git fetch之后本地的数据都会被覆盖
+git branch new-branch-to-save-current-commits
+# 第三句话和第四句话就是更新到最新的库（与github上的远程库同步）
+git fetch --all
+git reset --hard origin/master
+
+# 如果想要回到备份的“旧库”的话。输入：
+git branch
+# 会列出master和new-branch-to-save-current-commits两个branch。然后输入
+git checkout new-branch-to-save-current-commits
+# 就会切换到new-branch-to-save-current-commits branch了！
+```
+
