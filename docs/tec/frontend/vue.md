@@ -80,37 +80,50 @@ cd -
 
 
 
-要点 5：图片路径设置问题，在typora偏好设置中将图片默认的保存路径设置为../assets，并勾选上以下信息，保证每次插入图片在本地都有存储且方便上传时索引准确。如下：
+要点 5：图片路径设置问题，在 `typora` 偏好设置中将图片默认的保存路径设置为`../assets`，并勾选上以下信息，保证每次插入图片在本地都有存储且方便上传时索引准确。如下：
 
-<img src="../assets/image-20240330183159891.png" alt="image-20240330183159891" style="zoom: 67%;" />要点6：为了多设备同步，将现有博客部署到 master 分支下，即 sourch_code.sh 文件。在当前设备更新博客内容后，通过deploy.sh push到 gh_pages 分支，随后将项目源代码也进行更新
+<img src="../assets/image-20240330183159891.png" alt="image-20240330183159891" style="zoom: 67%;" />要点6：为了多设
 
 ```bash
-sh .sh # 从github master clone master分支代码
-# 更新博客内容
-sh deploy.sh # push 到gh_pages，方便访问
-sh sourch_code.sh # 从github master分支拉取源代码
+# 将网页部署到gh-pages分支
+set -e
+# 构建
+npm run build
+
+# 导航到构建输出目录
+cd docs/.vuepress/dist
+
+git init
+git add -A
+git commit -m 'deploy'
+
+# 推到你仓库的的 gh-page 分支
+# 将 <USERNAME>/<REPO> 替换为你的信息
+git push -f git@github.com:ChosenOne23/myblog.git master:gh-pages
+
+cd -
 ```
 
-
-
-
-
 ```bash
-# 第一句话，切换到master branch
+# 根据远端仓库更新本地分支的命令：
 git checkout master
-# 第二句话，新建一个branch来备份本地现有的“旧库”，因为一旦git fetch之后本地的数据都会被覆盖
-git branch new-branch-to-save-current-commits
-# 第三句话和第四句话就是更新到最新的库（与github上的远程库同步）
-git fetch --all
-git reset --hard origin/master
+# 1. 首先克隆(仅需做一次)：
+git clone -b 分支名 git@github.com:ChosenOne23/myblog.git
+# 2. 更新仓库(远端为 origin)：
+git pull origin master:master # 将远端的 master 分支更新到本地的master分支
+```
 
-# 如果想要回到备份的“旧库”的话。输入：
-git branch
-# 会列出master和new-branch-to-save-current-commits两个branch。然后输入
-git checkout new-branch-to-save-current-commits
-# 就会切换到new-branch-to-save-current-commits branch了！
+```bash
+# 根据本地分支更新远端分支:
+git checkout master # b本地切换到master分支
+git status # 查看当前有变更的代码文件
+git add ./ # 本地所有修改的内容到暂存区
+git commit -m “modify_mypc”  # 上传提交信息
+git pull origin master # 将远程最新的代码先跟你本地的代码合并一下
+git push origin master # 将代码推至远程就可以了。这里master可以是其他分支名字
 ```
 
 
 
-yaodian
+所以要更新博客，第一步是将远端代码(`master`分支)与本地(``master``分支)合并, 第二步是增加或修改博客, 最后一步是将更新后的内容 push 到远端的``gh-pages``,``master``
+
