@@ -1,0 +1,145 @@
+---
+icon: pen-to-square
+date: 2024-04-13
+category:
+  - tec
+  - vue
+tag:
+  - tec
+---
+# 基于vuepress搭建个人博客
+本文总结了在window上基于vuepress搭建个人博客的经历及所踩过的坑。。
+
+最初的设想是先在本地搭建成功之后，再通过github部署，方便个人访问及分享。因此思路主要如下：
+
+step 1: 通过网络搜索教程，熟悉vuepress相关代码及搭建流程，在个人电脑上进行测试。
+
+step 2: 在本地部署成功之后，通过个人的github搭建仓库，以sh命令集成指令，自动化提交到分支。
+
+最终没想到在step 1就耗费了非常多的时间和精力，以下总结相关错误及要点：
+
+
+
+`要点 1`：将exports写成export，导致每次新增区块如侧边栏或者导航栏都得不到想要的效果，耗费过于长的时间
+
+`总结 1`：代码阅读不够仔细
+
+```json
+module.exports = {
+}
+```
+
+
+
+`要点 2`：网上教程是需要通过npm或者yarn安装vuepress，过程中会出现一些bug，如某些库没有安装。
+
+`总结 2`：仔细阅读bug，定位关键词，通过搜索工具仔细搜寻，得到解决方案。
+
+
+
+`要点 3`：路径设置的问题，包括[部署到github需要注意的事项](https://www.jb51.net/article/263056.htm)，以及本地搭建是需要对vuepress的路径设置有一定的理解。后者需要阅读 vuepress 官方文档进行准确设置，vuepress 默认会读取该目录下的 README.md 文档，因此每次新建一个文件夹，都需要在该目录下新建一个 README.md：
+
+```json
+nav: [
+        {text:'首页',link:"/"},//  / 是读取 docs 文件夹下的 README.md 文件，即 / 结尾的路径将会被视为 */README.md
+        {text:'about',link:"/about/about"}, // 仅以 / 开头，不写 .md 后缀，默认读取文件夹下对应的 about.md 文件
+        {text:'Github',link:"https://github.com/ChosenOne23"}//  跳转链接
+        ],
+```
+
+`总结 3`：通过官方文档准确获取信息的能力。
+
+
+
+`要点 4`：将本地搭建好的博客挂载到 github 上的时候，根据网上的构建 deploy.py 教程，一键自动化部署会有相关问题：
+
+```shell
+#!/usr/bin/env sh
+# myblog/deploy.sh
+# 确保脚本抛出遇到的错误
+set -e
+
+# 生成静态文件
+npm run build  # 此处与 myblog/package.json 中的信息需保持一致，注意：默认情况下一般是npm run build
+
+# 进入生成的文件夹
+cd docs/.vuepress/dist
+
+git init
+git add -A
+git commit -m 'deploy'
+
+# 发布到 https://<USERNAME>.github.io/<REPO>
+git push -f git@github.com:ChosenOne23/myblog.git master:gh-pages # 提交到gh-pages分支
+
+cd -
+```
+
+```json
+// myblog/package.json
+{
+    ...
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "vuepress dev docs --temp .temp",
+        "build": "set NODE_OPTIONS=--openssl-legacy-provider && vuepress build docs" // 部署时需加上set NODE_OPTIONS=--openssl-legacy-provider
+      },
+    ...
+}
+```
+
+
+
+`要点 5`：图片路径设置问题，在 `typora` 偏好设置中将图片默认的保存路径设置为`../assets`，并勾选上以下信息，保证每次插入图片在本地都有存储且方便上传时索引准确。如下：
+
+<img src="../assets/image-20240330183159891.png" alt="image-20240330183159891" style="zoom: 67%;" />
+
+
+
+### 多机部署问题
+
+在两台不同的主机上本地更新了博客,如何将更新内容同步至远端,经过一番搜寻给出了答案：
+
+第一步是将远端代码(`master`分支)与本地(``master``分支)合并,第二步是增加或修改博客内容,最后一步是将更新后的内容`push`到远端的`gh-pages`,`master`。
+
+```bash
+# 根据远端仓库更新本地分支的命令：
+git checkout master
+# 1. 首先克隆(仅需做一次)：
+git clone -b 分支名 git@github.com:ChosenOne23/myblog.git
+# 2. 更新仓库(远端为 origin)：
+git pull origin master:master # 将远端的 master 分支更新到本地的master分支
+```
+
+```bash
+# 将网页部署到gh-pages分支
+set -e
+# 构建
+npm run build
+
+# 导航到构建输出目录
+cd docs/.vuepress/dist
+
+git init
+git add -A
+git commit -m 'deploy'
+
+# 推到你仓库的的 gh-page 分支
+# 将 <USERNAME>/<REPO> 替换为你的信息
+git push -f git@github.com:ChosenOne23/myblog.git master:gh-pages
+
+cd -
+```
+
+```bash
+# 根据本地分支更新远端分支:
+git checkout master # b本地切换到master分支
+git status # 查看当前有变更的代码文件
+git add ./ # 本地所有修改的内容到暂存区
+git commit -m “modify_mypc”  # 上传提交信息
+git pull origin master # 将远程最新的代码先跟你本地的代码合并一下
+git push origin master # 将代码推至远程就可以了。这里master可以是其他分支名字
+```
+
+
+
